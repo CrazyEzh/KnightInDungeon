@@ -17,6 +17,13 @@ class Interactive(ABC):
     def interact(self, engine, hero):
         pass
 
+class AbstractObject(ABC):
+    def __init__(self):
+        pass
+
+    def draw(self, display):
+        pass
+
 
 class Ally(AbstractObject, Interactive):
 
