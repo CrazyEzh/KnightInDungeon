@@ -22,7 +22,7 @@ class AbstractObject(ABC):
         pass
 
     def draw(self, display):
-        pass
+        display.blit(self.sprite, self.position)
 
 
 class Ally(AbstractObject, Interactive):
@@ -134,3 +134,24 @@ class Effect(Hero):
 
 # FIXME
 # add classes
+
+class Enemy(Creature, Interactive):
+    def __init__(self, icon, stats, exp, position):
+        self.sprite = icon
+        self.exp = exp
+        self.stats = stats
+        self.position = position
+
+    def interact(self, engine, hero):
+        hero.exp += self.exp
+
+
+
+class Berserk(Effect):
+    pass
+
+class Blessing(Effect):
+    pass
+
+class Weakness(Effect):
+    pass

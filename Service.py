@@ -37,10 +37,10 @@ def restore_hp(engine, hero):
 
 
 def apply_blessing(engine, hero):
-    if hero.gold >= int(20 * 1.5**engine.level) - 2 * hero.stats["intelligence"]:
+    if hero.gold >= int(20 * 1.5 ** engine.level) - 2 * hero.stats["intelligence"]:
         engine.score += 0.2
-        hero.gold -= int(20 * 1.5**engine.level) - \
-            2 * hero.stats["intelligence"]
+        hero.gold -= int(20 * 1.5 ** engine.level) - \
+                     2 * hero.stats["intelligence"]
         if random.randint(0, 1) == 0:
             engine.hero = Objects.Blessing(hero)
             engine.notify("Blessing applied")
@@ -52,9 +52,9 @@ def apply_blessing(engine, hero):
 
 
 def remove_effect(engine, hero):
-    if hero.gold >= int(10 * 1.5**engine.level) - 2 * hero.stats["intelligence"] and "base" in dir(hero):
-        hero.gold -= int(10 * 1.5**engine.level) - \
-            2 * hero.stats["intelligence"]
+    if hero.gold >= int(10 * 1.5 ** engine.level) - 2 * hero.stats["intelligence"] and "base" in dir(hero):
+        hero.gold -= int(10 * 1.5 ** engine.level) - \
+                     2 * hero.stats["intelligence"]
         engine.hero = hero.base
         engine.hero.calc_max_HP()
         engine.notify("Effect removed")
@@ -67,7 +67,7 @@ def add_gold(engine, hero):
         engine.notify("You were cursed")
     else:
         engine.score += 0.1
-        gold = int(random.randint(10, 1000) * (1.1**(engine.hero.level - 1)))
+        gold = int(random.randint(10, 1000) * (1.1 ** (engine.hero.level - 1)))
         hero.gold += gold
         engine.notify(f"{gold} gold added")
 
@@ -79,12 +79,11 @@ class MapFactory(yaml.YAMLObject):
         _map = cls.Map()
         _obj = cls.Objects()
         config = loader.construct_mapping(node)
-        _obj.objects.append(config)
+        # _obj.objects.append(config)
         return {'map': _map, 'obj': _obj}
 
 
 class EndMap(MapFactory):
-
     yaml_tag = "!end_map"
 
     class Map:
@@ -105,7 +104,7 @@ class EndMap(MapFactory):
             for i in self.Map:
                 for j in range(len(i)):
                     i[j] = wall if i[j] == '0' else floor1
-         
+
         def get_map(self):
             return self.Map
 
@@ -206,13 +205,18 @@ class RandomMap(MapFactory):
 
             return self.objects
 
+
 class EmptyMap(MapFactory):
     yaml_tag = "!empty_map"
 
     class Map:
 
         def __init__(self):
-            self.Map = [[0 for _ in range(41)] for _ in range(41)]
+            self.Map = [[_ for _ in range(41)] for _ in range(41)]
+
+            for i in self.Map:
+                for j in range(len(i)):
+                    i[j] = wall if i[j] == '0' else floor1
 
         def get_map(self):
             return self.Map
@@ -224,6 +228,7 @@ class EmptyMap(MapFactory):
 
         def get_objects(self, _map):
             return self.objects
+
 
 class SpecialMap(MapFactory):
     yaml_tag = "!special_map"
@@ -249,6 +254,27 @@ class SpecialMap(MapFactory):
             self.objects = []
 
         def get_objects(self, _map):
+
+            for obj_name in object_list_prob['enemies']:
+                prop = object_list_prob['enemies'][obj_name]
+                for i in range(random.randint(0, 5)):
+                    coord = (random.randint(1, 30), random.randint(1, 22))
+                    intersect = True
+                    while intersect:
+                        intersect = False
+                        if _map[coord[1]][coord[0]] == wall:
+                            intersect = True
+                            coord = (random.randint(1, 39),
+                                     random.randint(1, 39))
+                            continue
+                        for obj in self.objects:
+                            if coord == (1, 1) or coord == obj.position:
+                                intersect = True
+                                coord = (random.randint(1, 39),
+                                         random.randint(1, 39))
+
+                    self.objects.append(Objects.Enemy(
+                        prop['sprite'], prop, prop['experience'], coord))
 
             for obj_name in object_list_prob['objects']:
                 prop = object_list_prob['objects'][obj_name]
@@ -290,27 +316,6 @@ class SpecialMap(MapFactory):
                                          random.randint(1, 39))
                     self.objects.append(Objects.Ally(
                         prop['sprite'], prop['action'], coord))
-
-            for obj_name in object_list_prob['enemies']:
-                prop = object_list_prob['enemies'][obj_name]
-                for i in range(random.randint(0, 5)):
-                    coord = (random.randint(1, 30), random.randint(1, 22))
-                    intersect = True
-                    while intersect:
-                        intersect = False
-                        if _map[coord[1]][coord[0]] == wall:
-                            intersect = True
-                            coord = (random.randint(1, 39),
-                                     random.randint(1, 39))
-                            continue
-                        for obj in self.objects:
-                            if coord == obj.position or coord == (1, 1):
-                                intersect = True
-                                coord = (random.randint(1, 39),
-                                         random.randint(1, 39))
-
-                    self.objects.append(Objects.Enemy(
-                        prop['sprite'], prop, prop['experience'], coord))
 
             return self.objects
 

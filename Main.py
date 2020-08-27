@@ -1,10 +1,9 @@
 import pygame
 import os
 import Objects
-import ScreenEngine
+from ScreenEngine import GameSurface, ProgressBar, InfoWindow, HelpWindow, ScreenHandle
 import Logic
 import Service
-
 
 SCREEN_DIM = (800, 600)
 
@@ -15,6 +14,7 @@ KEYBOARD_CONTROL = True
 
 if not KEYBOARD_CONTROL:
     import numpy as np
+
     answer = np.zeros(4, dtype=float)
 
 base_stats = {
@@ -33,14 +33,13 @@ def create_game(sprite_size, is_new):
         engine = Logic.GameEngine()
         Service.service_init(sprite_size)
         Service.reload_game(engine, hero)
-        with ScreenEngine as SE:
-            drawer = SE.GameSurface((640, 480), pygame.SRCALPHA, (0, 480),
-                                    SE.ProgressBar((640, 120), (640, 0),
-                                                   SE.InfoWindow((160, 600), (50, 50),
-                                                                 SE.HelpWindow((700, 500), pygame.SRCALPHA, (0, 0),
-                                                                               SE.ScreenHandle(
-                                                                                   (0, 0))
-                                                                               ))))
+        drawer = GameSurface((640, 480), pygame.SRCALPHA, (0, 480),
+                             ProgressBar((640, 120), (640, 0),
+                                         InfoWindow((160, 600), (50, 50),
+                                                    HelpWindow((700, 500), pygame.SRCALPHA, (0, 0),
+                                                               ScreenHandle(
+                                                                   (0, 0))
+                                                               ))))
 
     else:
         engine.sprite_size = sprite_size
