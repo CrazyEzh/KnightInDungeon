@@ -5,9 +5,10 @@
 /dataSources/
 /dataSources.local.xml
 # Editor-based HTTP Client requests
-/httpRequests/
-/final_project.iml
-/misc.xml
-/modules.xml
-/inspectionProfiles/profiles_settings.xml
-/vcs.xml
+.idea/httpRequests/
+.idea/final_project.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/vcs.xml
+.idea
