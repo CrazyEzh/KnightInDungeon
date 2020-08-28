@@ -38,20 +38,37 @@ class ScreenHandle(pygame.Surface):
 
 
 class GameSurface(ScreenHandle):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.screen_size = self.get_size()
+        self.map_corner = [0, 0]
 
     # def connect_engine(self, engine):
     #     self.game_engine = engine
     #     # FIXME save engine and send it to next in chain
 
     def draw_hero(self):
+
         self.game_engine.hero.draw(self)
 
+    def get_corner(self):
+        hero_pos = self.game_engine.hero.position
+        half_x = (self.screen_size[0] // self.game_engine.sprite_size) // 2
+        half_y = (self.screen_size[1] // self.game_engine.sprite_size) // 2
+        if hero_pos[0] > half_x:
+            self.map_corner[0] = hero_pos[0] - half_x
+        else:
+            self.map_corner[0] = 0
+        if hero_pos[1] > half_y:
+            self.map_corner[1] = hero_pos[1] - half_y
+        else:
+            self.map_corner[1] = 0
+
+        return self.map_corner
+
     def draw_map(self):
-
         # FIXME || calculate (min_x,min_y) - left top corner
-
-        min_x = 0
-        min_y = 0
+        min_x, min_y = self.get_corner()
 
         ##
 
@@ -67,25 +84,23 @@ class GameSurface(ScreenHandle):
         size = self.game_engine.sprite_size
         # FIXME || calculate (min_x,min_y) - left top corner
 
-        min_x = 0
-        min_y = 0
+        min_x, min_y = self.get_corner()
 
         ##
-        self.blit(sprite, ((coord[0] - min_x) * self.game_engine.sprite_size,
-                           (coord[1] - min_y) * self.game_engine.sprite_size))
+        self.blit(sprite, ((coord[0] - min_x) * size,
+                           (coord[1] - min_y) * size))
 
     def draw(self, canvas):
         size = self.game_engine.sprite_size
         # FIXME || calculate (min_x,min_y) - left top corner
 
-        min_x = 0
-        min_y = 0
+        min_x, min_y = self.get_corner()
 
         ##
         self.draw_map()
         for obj in self.game_engine.objects:
-            self.blit(obj.sprite[0], ((obj.position[0] - min_x) * self.game_engine.sprite_size,
-                                      (obj.position[1] - min_y) * self.game_engine.sprite_size))
+            self.blit(obj.sprite[0], ((obj.position[0] - min_x) * size,
+                                      (obj.position[1] - min_y) * size))
         self.draw_hero()
 
         super().draw(canvas)
@@ -111,7 +126,7 @@ class ProgressBar(ScreenHandle):
             "red"], (50, 30, 200 * self.game_engine.hero.hp / self.game_engine.hero.max_hp, 30))
         pygame.draw.rect(self, colors["green"], (50, 70,
                                                  200 * self.game_engine.hero.exp / (
-                                                             100 * (2 ** (self.game_engine.hero.level - 1))), 30))
+                                                         100 * (2 ** (self.game_engine.hero.level - 1))), 30))
 
         font = pygame.font.SysFont("comicsansms", 20)
         self.blit(font.render(f'Hero at {self.game_engine.hero.position}', True, colors["black"]),
@@ -128,7 +143,8 @@ class ProgressBar(ScreenHandle):
         self.blit(font.render(f'{self.game_engine.hero.hp}/{self.game_engine.hero.max_hp}', True, colors["black"]),
                   (60, 30))
         self.blit(
-            font.render(f'{self.game_engine.hero.exp}/{(100 * (2 ** (self.game_engine.hero.level - 1)))}', True, colors["black"]),
+            font.render(f'{self.game_engine.hero.exp}/{(100 * (2 ** (self.game_engine.hero.level - 1)))}', True,
+                        colors["black"]),
             (60, 70))
 
         self.blit(font.render(f'Level', True, colors["black"]),
@@ -182,9 +198,6 @@ class InfoWindow(ScreenHandle):
                       (5, 20 + 18 * i))
 
         super().draw(canvas)
-
-    # FIXME
-    # draw next surface in chain
 
     # def connect_engine(self, engine):
     #     # FIXME set this class as Observer to engine and send it to next in

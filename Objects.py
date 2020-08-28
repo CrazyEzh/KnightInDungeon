@@ -17,6 +17,7 @@ class Interactive(ABC):
     def interact(self, engine, hero):
         pass
 
+
 class AbstractObject(ABC):
     def __init__(self):
         pass
@@ -56,6 +57,7 @@ class Hero(Creature):
         self.level = 1
         self.exp = 0
         self.gold = 0
+        self.hero_size = icon.get_height()
         super().__init__(icon, stats, pos)
 
     def level_up(self):
@@ -66,6 +68,11 @@ class Hero(Creature):
             self.stats["endurance"] += 2
             self.calc_max_HP()
             self.hp = self.max_hp
+
+    def draw(self, display):
+        display.blit(self.sprite,
+                     ((self.position[0] - display.map_corner[0]) * self.hero_size,
+                      (self.position[1] - display.map_corner[1]) * self.hero_size))
 
 
 class Effect(Hero):
@@ -146,12 +153,13 @@ class Enemy(Creature, Interactive):
         hero.exp += self.exp
 
 
-
 class Berserk(Effect):
     pass
 
+
 class Blessing(Effect):
     pass
+
 
 class Weakness(Effect):
     pass

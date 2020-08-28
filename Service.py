@@ -78,8 +78,6 @@ class MapFactory(yaml.YAMLObject):
     def from_yaml(cls, loader, node):
         _map = cls.Map()
         _obj = cls.Objects()
-        config = loader.construct_mapping(node)
-        # _obj.objects.append(config)
         return {'map': _map, 'obj': _obj}
 
 
@@ -212,11 +210,23 @@ class EmptyMap(MapFactory):
     class Map:
 
         def __init__(self):
-            self.Map = [[_ for _ in range(41)] for _ in range(41)]
+            self.Map = ['0000000000000000000000000000000000000000',
+                        '0                                      0',
+                        '0                                      0',
+                        '0                                      0',
+                        '0                                      0',
+                        '0                                      0',
+                        '0                                      0',
+                        '0                                      0',
+                        '0                                      0',
+                        '0                                      0',
+                        '0000000000000000000000000000000000000000'
+                        ]
 
-            for i in self.Map:
-                for j in range(len(i)):
-                    i[j] = wall if i[j] == '0' else floor1
+            self.Map = list(map(list, self.Map))
+            for i in range(len(self.Map)):
+                for j in range(len(self.Map[0])):
+                    self.Map[i][j] = wall if self.Map[i][j] == '0' else floor1
 
         def get_map(self):
             return self.Map
@@ -227,6 +237,23 @@ class EmptyMap(MapFactory):
             self.objects = []
 
         def get_objects(self, _map):
+
+            prop = object_list_prob['objects']["stairs"]
+            coord = (random.randint(1, len(_map[0]) - 1), random.randint(1, len(_map) - 1))
+            intersect = True
+            while intersect:
+                intersect = False
+                if _map[coord[1]][coord[0]] == wall:
+                    intersect = True
+                    coord = (random.randint(1, len(_map)), random.randint(1, len(_map[0]) - 1))
+                    continue
+                for obj in self.objects:
+                    if coord == obj.position or coord == (1, 1):
+                        intersect = True
+                        coord = (random.randint(1, len(_map)), random.randint(1, len(_map[0]) - 1))
+
+            self.objects.append(Objects.Ally(
+                prop['sprite'], prop['action'], coord))
             return self.objects
 
 
