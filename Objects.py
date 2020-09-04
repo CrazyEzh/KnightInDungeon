@@ -3,16 +3,7 @@ import pygame
 import random
 
 
-def create_sprite(img, sprite_size):
-    icon = pygame.image.load(img).convert_alpha()
-    icon = pygame.transform.scale(icon, (sprite_size, sprite_size))
-    sprite = pygame.Surface((sprite_size, sprite_size), pygame.HWSURFACE)
-    sprite.blit(icon, (0, 0))
-    return sprite
-
-
 class Interactive(ABC):
-
     @abstractmethod
     def interact(self, engine, hero):
         pass
@@ -26,21 +17,10 @@ class AbstractObject(ABC):
         display.blit(self.sprite, self.position)
 
 
-class Ally(AbstractObject, Interactive):
-
-    def __init__(self, icon, action, position):
-        self.sprite = icon
-        self.action = action
-        self.position = position
-
-    def interact(self, engine, hero):
-        self.action(engine, hero)
-
-
 class Creature(AbstractObject):
-
     def __init__(self, icon, stats, position):
         self.sprite = icon
+        self.orig_sprite = icon
         self.stats = stats
         self.position = position
         self.calc_max_HP()
@@ -51,13 +31,13 @@ class Creature(AbstractObject):
 
 
 class Hero(Creature):
-
     def __init__(self, stats, icon):
         pos = [1, 1]
         self.level = 1
         self.exp = 0
         self.gold = 0
         self.hero_size = icon.get_height()
+        self.dead = False
         super().__init__(icon, stats, pos)
 
     def level_up(self):
@@ -69,14 +49,55 @@ class Hero(Creature):
             self.calc_max_HP()
             self.hp = self.max_hp
 
-    def draw(self, display):
-        display.blit(self.sprite,
-                     ((self.position[0] - display.map_corner[0]) * self.hero_size,
-                      (self.position[1] - display.map_corner[1]) * self.hero_size))
+
+class Ally(AbstractObject, Interactive):
+    def __init__(self, icon, action, position):
+        self.sprite = icon
+        self.orig_sprite = icon
+        self.action = action
+        self.position = position
+
+    def interact(self, engine, hero):
+        self.action(engine, hero)
+
+
+class Enemy(Creature, Interactive):
+    def __init__(self, icon, stats, exp, position):
+        super().__init__(icon, stats, position)
+        self.exp = exp
+        self.calc_max_HP()
+        self.hp = self.max_hp
+
+    def interact(self, engine, hero):
+
+        while hero.hp > 0 and self.hp > 0:
+            if self.critical(hero.stats["luck"], self.stats["luck"]):
+                self.hp -= hero.stats["strength"] * 2
+            else:
+                self.hp -= hero.stats["strength"]
+            if self.hp <= 0:
+                break
+            hero.hp -= self.stats["strength"]
+
+        if hero.hp > 0:
+            hero.exp += self.exp
+            gold = self.exp + random.randint(1, self.exp)
+            hero.gold += gold
+            engine.notify(f"{gold} gold added")
+            engine.score += self.exp / 100
+        else:
+            hero.dead = True
+
+    def critical(self, hero_luck, enemy_luck):
+        h_chance = random.randint(0, hero_luck)
+        e_chance = random.randint(0, enemy_luck)
+        if h_chance >= e_chance:
+            return True
+        else:
+            return False
 
 
 class Effect(Hero):
-
     def __init__(self, base):
         self.base = base
         self.stats = self.base.stats.copy()
@@ -134,32 +155,54 @@ class Effect(Hero):
     def sprite(self):
         return self.base.sprite
 
+    @sprite.setter
+    def sprite(self, value):
+        self.base.sprite = value
+
+    @property
+    def hero_size(self):
+        return self.base.hero_size
+
+    @property
+    def dead(self):
+        return self.base.dead
+
+    @dead.setter
+    def dead(self, value):
+        self.base.dead = value
+
     @abstractmethod
     def apply_effect(self):
         pass
 
 
-# FIXME
-# add classes
-
-class Enemy(Creature, Interactive):
-    def __init__(self, icon, stats, exp, position):
-        self.sprite = icon
-        self.exp = exp
-        self.stats = stats
-        self.position = position
-
-    def interact(self, engine, hero):
-        hero.exp += self.exp
-
-
 class Berserk(Effect):
-    pass
+    def apply_effect(self):
+        self.stats["strength"] += 7
+        self.stats["endurance"] += 7
+        self.stats["luck"] += 7
+        self.stats["intelligence"] -= 3
+        self.calc_max_HP()
+        super().apply_effect()
 
 
 class Blessing(Effect):
-    pass
+    def apply_effect(self):
+        self.stats["strength"] += 2
+        self.stats["endurance"] += 2
+        self.stats["luck"] += 2
+        self.stats["intelligence"] += 2
+        self.calc_max_HP()
+        super().apply_effect()
 
 
 class Weakness(Effect):
-    pass
+    def apply_effect(self):
+        self.stats["strength"] -= 4
+        self.stats["endurance"] -= 4
+        super().apply_effect()
+
+class Power(Effect):
+    def apply_effect(self):
+        self.stats["strength"] += 15
+        super().apply_effect()

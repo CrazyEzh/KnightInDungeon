@@ -25,6 +25,11 @@ ally:
     action: restore_hp
     min-count: 0
     max-count: 3
+  power:
+    sprite: [NPC_4.png]
+    action: apply_power
+    min-count: 1
+    max-count: 6
 enemies:
   rat:
     sprite: [rat.png]
@@ -40,6 +45,13 @@ enemies:
     intelligence: 15
     luck: 10
     experience: 200
+  ghost:
+    sprite: [ghost.png]
+    strength: 20
+    endurance: 20
+    intelligence: 30
+    luck: 5
+    experience: 350
   naga:
     sprite: [Naga.png]
     strength: 25
